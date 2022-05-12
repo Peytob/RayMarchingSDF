@@ -8,6 +8,10 @@
 
 #include <GLFW/glfw3.h>
 
+#include <glDemo/ogl/shader/Shader.hpp>
+
+using namespace OGL;
+
 std::string loadFile(const std::string& path) {
     std::ifstream fileStream(path);
     std::stringstream buffer;
@@ -15,27 +19,11 @@ std::string loadFile(const std::string& path) {
     return buffer.str();
 }
 
-GLint loadShader(const std::string& path, GLint shaderType) {
+Shader loadShader(const std::string& path, ShaderType shaderType) {
     GLint shaderId = glCreateShader(shaderType);
     std::string code = loadFile(path);
-    char const* codePointer = code.c_str();
 
-    glShaderSource(shaderId, 1, &codePointer, nullptr);
-    glCompileShader(shaderId);
-
-    GLint isCompiled;
-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &isCompiled);
-    if (isCompiled == GL_FALSE) {
-        GLint infoLogLength;
-        glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLogLength);
-        std::vector<char> messageChars(infoLogLength + 1);
-        glGetShaderInfoLog(shaderId, infoLogLength, nullptr, &messageChars[0]);
-        std::string message = std::string(messageChars.begin(), messageChars.end());
-        std::cerr << "Error while compiling shader: " << message << std::endl;
-        std::exit(1);
-    }
-
-    return shaderId;
+    return Shader::create(shaderType, code);
 }
 
 int main()
@@ -67,18 +55,21 @@ int main()
     }
 
     int width, height;
-    glfwGetFramebufferSize(window, &width, &height);  
+    glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
 
     /* Loading shader program */
 
-    GLint vertexShader = loadShader("./resources/vertex.glsl", GL_VERTEX_SHADER);
-    GLint fragmentShader = loadShader("./resources/fragment.glsl", GL_FRAGMENT_SHADER);
-
     GLint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+
+    {
+        Shader vertexShader = loadShader("./resources/vertex.glsl", ShaderType::Vertex);
+        Shader fragmentShader = loadShader("./resources/fragment.glsl", ShaderType::Fragment);
+
+        glAttachShader(shaderProgram, vertexShader.getId());
+        glAttachShader(shaderProgram, fragmentShader.getId());
+        glLinkProgram(shaderProgram);
+    }
 
     GLint isLinked;
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &isLinked);
@@ -90,9 +81,6 @@ int main()
         glDeleteProgram(shaderProgram);
         std::exit(1);
     }
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
 
     /* Rect initialization */
 
@@ -123,7 +111,7 @@ int main()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
 
