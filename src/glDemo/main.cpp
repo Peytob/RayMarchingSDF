@@ -9,6 +9,7 @@
 #include <GLFW/glfw3.h>
 
 #include <glDemo/ogl/shader/Shader.hpp>
+#include <glDemo/ogl/shader/ShaderProgram.hpp>
 
 using namespace OGL;
 
@@ -60,27 +61,9 @@ int main()
 
     /* Loading shader program */
 
-    GLint shaderProgram = glCreateProgram();
-
-    {
-        Shader vertexShader = loadShader("./resources/vertex.glsl", ShaderType::Vertex);
-        Shader fragmentShader = loadShader("./resources/fragment.glsl", ShaderType::Fragment);
-
-        glAttachShader(shaderProgram, vertexShader.getId());
-        glAttachShader(shaderProgram, fragmentShader.getId());
-        glLinkProgram(shaderProgram);
-    }
-
-    GLint isLinked;
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &isLinked);
-    if (isLinked == GL_FALSE) {
-        GLint infoLogLength;
-        glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
-        std::vector<GLchar> infoLog(infoLogLength + 1);
-        glGetProgramInfoLog(shaderProgram, infoLogLength, &infoLogLength, &infoLog[0]);
-        glDeleteProgram(shaderProgram);
-        std::exit(1);
-    }
+    Shader vertexShader = loadShader("./resources/vertex.glsl", ShaderType::Vertex);
+    Shader fragmentShader = loadShader("./resources/fragment.glsl", ShaderType::Fragment);
+    ShaderProgram shaderProgram = ShaderProgram::create(vertexShader, fragmentShader);
 
     /* Rect initialization */
 
@@ -123,14 +106,13 @@ int main()
         glClearColor(0.88f, 0.0f, 0.88f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
+        glUseProgram(shaderProgram.getId());
         glBindVertexArray(vertexArray);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
     }
 
-    glDeleteProgram(shaderProgram);
     glDeleteBuffers(1, &vertexBuffer);
     glDeleteBuffers(1, &elementBuffer);
     glDeleteVertexArrays(1, &vertexArray);

@@ -28,6 +28,7 @@ Shader Shader::create(ShaderType type, std::string code) {
     glGetShaderiv(shaderId, GL_COMPILE_STATUS, &isCompiled);
     if (isCompiled == GL_FALSE) {
         std::string logMessage = getShaderCompilationLogMessage(shaderId);
+        glDeleteShader(shaderId);
         throw ShaderCompilationException(code, logMessage);
     }
 
