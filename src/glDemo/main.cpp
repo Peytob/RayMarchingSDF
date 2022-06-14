@@ -11,6 +11,8 @@
 #include <glDemo/ogl/shader/Shader.hpp>
 #include <glDemo/ogl/shader/ShaderProgram.hpp>
 
+#include <glDemo/ogl/buffer/Buffer.hpp>
+
 using namespace OGL;
 
 std::string loadFile(const std::string& path) {
@@ -79,22 +81,20 @@ int main()
         1, 2, 3
     };
 
-    GLuint vertexBuffer, vertexArray, elementBuffer;
+    GLuint vertexArray;
     glGenVertexArrays(1, &vertexArray);
-    glGenBuffers(1, &vertexBuffer);
-    glGenBuffers(1, &elementBuffer);
     glBindVertexArray(vertexArray);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    Buffer vertexBuffer = Buffer::create(BufferType::Array);
+    vertexBuffer.bind();
+    vertexBuffer.loadData(sizeof(vertices), vertices);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    Buffer elementBuffer = Buffer::create(BufferType::ElementArray);
+    elementBuffer.bind();
+    elementBuffer.loadData(sizeof(indices), indices);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glBindVertexArray(0);
 
@@ -113,8 +113,6 @@ int main()
         glfwSwapBuffers(window);
     }
 
-    glDeleteBuffers(1, &vertexBuffer);
-    glDeleteBuffers(1, &elementBuffer);
     glDeleteVertexArrays(1, &vertexArray);
 
     glfwTerminate();

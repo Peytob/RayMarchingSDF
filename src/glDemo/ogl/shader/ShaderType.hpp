@@ -5,7 +5,7 @@
 
 namespace OGL {
 
-enum ShaderType : GLuint {
+enum ShaderType : GLenum {
     Vertex = GL_VERTEX_SHADER,
     Fragment = GL_FRAGMENT_SHADER
 };
