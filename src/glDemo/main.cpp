@@ -12,6 +12,7 @@
 #include <glDemo/ogl/shader/ShaderProgram.hpp>
 
 #include <glDemo/ogl/buffer/Buffer.hpp>
+#include <glDemo/ogl/buffer/VertexArray.hpp>
 
 using namespace OGL;
 
@@ -81,9 +82,8 @@ int main()
         1, 2, 3
     };
 
-    GLuint vertexArray;
-    glGenVertexArrays(1, &vertexArray);
-    glBindVertexArray(vertexArray);
+    VertexArray vertexArray = VertexArray::create();
+    vertexArray.bind();
 
     Buffer vertexBuffer = Buffer::create(BufferType::Array);
     vertexBuffer.bind();
@@ -93,10 +93,8 @@ int main()
     elementBuffer.bind();
     elementBuffer.loadData(sizeof(indices), indices);
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindVertexArray(0);
+    auto attribute = VertexArrayAttribute(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    vertexArray.enableAttribute(attribute);
 
     /* Main cycle */
 
@@ -106,14 +104,12 @@ int main()
         glClearColor(0.88f, 0.0f, 0.88f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram.getId());
-        glBindVertexArray(vertexArray);
+        shaderProgram.use();
+        vertexArray.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
     }
-
-    glDeleteVertexArrays(1, &vertexArray);
 
     glfwTerminate();
 

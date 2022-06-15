@@ -12,6 +12,7 @@ class ShaderProgram {
 public:
 
     const GLuint getId() const;
+    void use();
 
     ~ShaderProgram();
 

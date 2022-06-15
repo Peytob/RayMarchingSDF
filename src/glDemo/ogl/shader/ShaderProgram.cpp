@@ -43,6 +43,10 @@ ShaderProgram ShaderProgram::create(Shader vertexShader, Shader fragmentShader) 
     return ShaderProgram(shaderProgramId);
 }
 
+void ShaderProgram::use() {
+    glUseProgram(id);
+}
+
 const GLuint ShaderProgram::getId() const {
     return id;
 }
