@@ -47,6 +47,18 @@ void ShaderProgram::use() {
     glUseProgram(id);
 }
 
+GLint ShaderProgram::getUniformLocation(const GLchar* name) {
+    return glGetUniformLocation(id, name);
+}
+
+void ShaderProgram::setUniform(GLint location, float data) {
+    glUniform1f(location, data);
+}
+
+void ShaderProgram::setUniform(GLint location, glm::vec3 data) {
+    glUniform3fv(location, 1, &data[0]);
+}
+
 const GLuint ShaderProgram::getId() const {
     return id;
 }

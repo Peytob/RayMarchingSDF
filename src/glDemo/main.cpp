@@ -67,6 +67,7 @@ int main()
     Shader vertexShader = loadShader("./resources/vertex.glsl", ShaderType::Vertex);
     Shader fragmentShader = loadShader("./resources/fragment.glsl", ShaderType::Fragment);
     ShaderProgram shaderProgram = ShaderProgram::create(vertexShader, fragmentShader);
+    GLint timeUniformLocation = shaderProgram.getUniformLocation("time");
 
     /* Rect initialization */
 
@@ -101,12 +102,15 @@ int main()
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
+        std::cout << timeUniformLocation << " " << glfwGetTime() << std::endl;
+
         glClearColor(0.88f, 0.0f, 0.88f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         shaderProgram.use();
+        shaderProgram.setUniform(timeUniformLocation, glfwGetTime());
         vertexArray.bind();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]), GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
     }

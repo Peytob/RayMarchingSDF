@@ -2,6 +2,7 @@
 #define __SHADER__PROGRAM_HPP__
 
 #include <GL/glew.h>
+#include <glm/vec3.hpp>
 
 namespace OGL
 {
@@ -17,6 +18,11 @@ public:
     ~ShaderProgram();
 
     static ShaderProgram create(Shader vertexShader, Shader fragmentShader);
+
+    GLint getUniformLocation(const GLchar* name);
+    void setUniform(GLint location, float data);
+    void setUniform(GLint location, glm::vec3 data);
+
 private:
     ShaderProgram(GLuint id);
 
