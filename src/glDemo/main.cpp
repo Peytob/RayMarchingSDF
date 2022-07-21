@@ -8,6 +8,8 @@
 
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+
 #include <glDemo/ogl/shader/Shader.hpp>
 #include <glDemo/ogl/shader/ShaderProgram.hpp>
 
@@ -71,7 +73,7 @@ int main()
     Shader fragmentShader = loadShader("./resources/fragment.glsl", ShaderType::Fragment);
     ShaderProgram shaderProgram = ShaderProgram::create(vertexShader, fragmentShader);
 
-    #ifdef DEBUG
+    #ifndef DEBUG
 
     std::cout << "Finded uniforms variables in shader program:" << std::endl;
     for (const auto& uniform : shaderProgram.getUniforms()) {
@@ -79,6 +81,9 @@ int main()
     }
 
     #endif
+
+    shaderProgram.use();
+    shaderProgram.setUniform("u_resolution", glm::vec2 { WINDOW_WIDTH, WINDOW_HEIGHT });
 
     /* Rect initialization */
 

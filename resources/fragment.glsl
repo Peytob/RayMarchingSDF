@@ -4,20 +4,16 @@ out vec3 fs_color;
 
 in vec4 vs_position;
 
-uniform float time;
+uniform float u_resolution;
+uniform float u_time;
 
-bool inSphere(vec2 center, float radius, vec2 point) {
-    return sqrt( (point.x - center.x) * (point.x - center.x) + (point.y - center.y) * (point.y - center.y) ) > radius * radius;
+vec3 render(in vec2 uvScreenCoordinates) {
+    return vec3(1.0, uvScreenCoordinates.xy);
 }
 
-const vec3 orangeColor = vec3(1.0, 0.5, 0.25);
+void main() {
+    vec2 uvScreenCoordinates = (2.0 * gl_FragCoord.xy - u_resolution.xy) / u_resolution.y;
+    vec3 color = (uvScreenCoordinates);
 
-void main()
-{
-    bool isFragmentInCircle = inSphere(vec2(0, 0), 0.8, vs_position.xy);
-    if (isFragmentInCircle) {
-        fs_color = orangeColor * sin(time);
-    } else {
-        fs_color = orangeColor * cos(time);
-    }
+    fs_color = color * u_time;
 }

@@ -5,6 +5,7 @@
 #include <map>
 #include <GL/glew.h>
 #include <glm/vec3.hpp>
+#include <glm/vec2.hpp>
 
 namespace OGL
 {
@@ -21,19 +22,18 @@ public:
 
     static ShaderProgram create(Shader vertexShader, Shader fragmentShader);
 
-    GLint getUniformLocation(const GLchar* name);
-    void setUniform(const std::string& location, float data);
-    void setUniform(const std::string& location, glm::vec3 data);
+    GLint getUniformLocation(const std::string& name) const;
+    void setUniform(const std::string& name, float data);
+    void setUniform(const std::string& name, const glm::vec2& data);
+    void setUniform(const std::string& name, const glm::vec3& data);
 
-    const std::map<const std::string, GLint>& getUniforms() const;
+    const std::map<std::string, GLint>& getUniforms() const;
 
 private:
-    ShaderProgram(GLuint id, std::map<const std::string, GLint>& uniforms);
+    ShaderProgram(GLuint id, std::map<std::string, GLint> uniforms);
 
     const GLuint id;
-    const std::map<const std::string, GLint> uniforms;
-
-    GLint getUniformLocation(const std::string& location) const;
+    const std::map<std::string, GLint> uniforms;
 };
 
 }

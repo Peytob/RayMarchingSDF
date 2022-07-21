@@ -16,27 +16,22 @@ static std::string getShaderProgramCompilationInfoLog(GLuint shaderProgramId) {
     return std::string(infoLog.begin(), infoLog.end());
 }
 
-static GLint getUniformsCount(GLuint shaderProgramId) {
-    GLint total;
-    glGetProgramiv(shaderProgramId, GL_ACTIVE_UNIFORMS, &total); 
-    return total;
-}
+static std::map<std::string, GLint> searchShaderProgramUniforms(GLuint shaderProgramId) {
+    std::map<std::string, GLint> uniforms; 
 
-static std::map<const std::string, GLint> searchShaderProgramUniforms(GLuint shaderProgramId) {
-    GLint total = getUniformsCount(shaderProgramId);
-    std::map<const std::string, GLint> uniforms; 
+    GLint uniformsCount;
+    glGetProgramiv(shaderProgramId, GL_ACTIVE_UNIFORMS, &uniformsCount);
 
-    for (GLint i = 0; i < total; ++i) {
-        GLenum type = GL_ZERO;
-        std::vector<GLchar> nameBuffer(256);
-        GLint uniformNameLength;
-        GLint uniformSize;
-        glGetActiveUniform(shaderProgramId, GLuint(i), nameBuffer.size(), &uniformNameLength, &uniformSize, &type, &nameBuffer[0]);
+    std::vector<GLchar> nameData(256);
+    for (GLint uniform = 0; uniform < uniformsCount; ++uniform) {
+        GLint arraySize;
+        GLenum type;
+        GLsizei actualLength;
+        glGetActiveUniform(shaderProgramId, uniform, nameData.size(), &actualLength, &arraySize, &type, &nameData[0]);
+        std::string name((char*)&nameData[0], actualLength);
 
-        GLuint location = glGetUniformLocation(shaderProgramId, &nameBuffer[0]);
-        std::string name = std::string(nameBuffer.begin(), nameBuffer.end());
-
-        uniforms.insert({name, location});
+        GLint location = glGetUniformLocation(shaderProgramId, name.c_str());
+        uniforms.insert({ name, location });
     }
 
     return uniforms;
@@ -44,7 +39,7 @@ static std::map<const std::string, GLint> searchShaderProgramUniforms(GLuint sha
 
 }
 
-ShaderProgram::ShaderProgram(GLuint id, std::map<const std::string, GLint>& uniforms) : id(id), uniforms(std::move(uniforms)) {
+ShaderProgram::ShaderProgram(GLuint id, std::map<std::string, GLint> uniforms) : id(id), uniforms(uniforms) {
 }
 
 ShaderProgram::~ShaderProgram() {
@@ -66,7 +61,7 @@ ShaderProgram ShaderProgram::create(Shader vertexShader, Shader fragmentShader) 
         throw ShaderProgramLinkException(infoLog);
     }
 
-    std::map<const std::string, GLint> uniforms = searchShaderProgramUniforms(shaderProgramId);
+    std::map<std::string, GLint> uniforms = searchShaderProgramUniforms(shaderProgramId);
 
     return ShaderProgram(shaderProgramId, uniforms);
 }
@@ -75,31 +70,32 @@ void ShaderProgram::use() {
     glUseProgram(id);
 }
 
-GLint ShaderProgram::getUniformLocation(const GLchar* name) {
-    return glGetUniformLocation(id, name);
+GLint ShaderProgram::getUniformLocation(const std::string& name) const {
+    auto uniform = uniforms.find(name);
+
+    if (uniform != uniforms.end()) {
+        return uniform->second;
+    }
+
+    return -1;
 }
 
-void ShaderProgram::setUniform(const std::string& location, float data) {
-    glUniform1f(getUniformLocation(location), data);
+void ShaderProgram::setUniform(const std::string& name, float data) {
+    glUniform1f(getUniformLocation(name), data);
 }
 
-void ShaderProgram::setUniform(const std::string& location, glm::vec3 data) {
-    glUniform3fv(getUniformLocation(location), 1, &data[0]);
+void ShaderProgram::setUniform(const std::string& name, const glm::vec2& data) {
+    glUniform2fv(getUniformLocation(name), 1, &data[0]);
+}
+
+void ShaderProgram::setUniform(const std::string& name, const glm::vec3& data) {
+    glUniform3fv(getUniformLocation(name), 1, &data[0]);
 }
 
 const GLuint ShaderProgram::getId() const {
     return id;
 }
 
-const std::map<const std::string, GLint>& ShaderProgram::getUniforms() const {
+const std::map<std::string, GLint>& ShaderProgram::getUniforms() const {
     return uniforms;
-}
-
-GLint ShaderProgram::getUniformLocation(const std::string& location) const {
-    auto it = uniforms.find(location);
-    if (it != uniforms.end()) {
-        return it->second;
-    }
-
-    return -1;
 }
