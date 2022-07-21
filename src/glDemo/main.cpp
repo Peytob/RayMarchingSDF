@@ -47,7 +47,10 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Some window", nullptr, nullptr);
+    const int WINDOW_WIDTH = 800;
+    const int WINDOW_HEIGHT = 600;
+
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Some window", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
     glewExperimental = GL_TRUE;
@@ -67,7 +70,15 @@ int main()
     Shader vertexShader = loadShader("./resources/vertex.glsl", ShaderType::Vertex);
     Shader fragmentShader = loadShader("./resources/fragment.glsl", ShaderType::Fragment);
     ShaderProgram shaderProgram = ShaderProgram::create(vertexShader, fragmentShader);
-    GLint timeUniformLocation = shaderProgram.getUniformLocation("time");
+
+    #ifdef DEBUG
+
+    std::cout << "Finded uniforms variables in shader program:" << std::endl;
+    for (const auto& uniform : shaderProgram.getUniforms()) {
+        std::cout << uniform.first << "; located at " << uniform.second << std::endl;
+    }
+
+    #endif
 
     /* Rect initialization */
 
@@ -102,19 +113,17 @@ int main()
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        std::cout << timeUniformLocation << " " << glfwGetTime() << std::endl;
-
         glClearColor(0.88f, 0.0f, 0.88f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         shaderProgram.use();
-        shaderProgram.setUniform(timeUniformLocation, glfwGetTime());
         vertexArray.bind();
         glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]), GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
     }
 
+    glfwDestroyWindow(window);
     glfwTerminate();
 
     return 0;
