@@ -73,7 +73,7 @@ int main()
     Shader fragmentShader = loadShader("./resources/fragment.glsl", ShaderType::Fragment);
     ShaderProgram shaderProgram = ShaderProgram::create(vertexShader, fragmentShader);
 
-    #ifndef DEBUG
+    #ifdef DEBUG
 
     std::cout << "Finded uniforms variables in shader program:" << std::endl;
     for (const auto& uniform : shaderProgram.getUniforms()) {
@@ -84,6 +84,9 @@ int main()
 
     shaderProgram.use();
     shaderProgram.setUniform("u_resolution", glm::vec2 { WINDOW_WIDTH, WINDOW_HEIGHT });
+    shaderProgram.setUniform("u_resolution", glm::vec2 { WINDOW_WIDTH, WINDOW_HEIGHT });
+    shaderProgram.setUniform("u_cameraPosition", glm::vec3 { 0.0f, 0.0f, -3.0f });
+    shaderProgram.setUniform("u_fov", 1.0f);
 
     /* Rect initialization */
 
