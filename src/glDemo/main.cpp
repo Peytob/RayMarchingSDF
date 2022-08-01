@@ -9,6 +9,7 @@
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 #include <glDemo/ogl/shader/Shader.hpp>
 #include <glDemo/ogl/shader/ShaderProgram.hpp>
@@ -16,7 +17,10 @@
 #include <glDemo/ogl/buffer/Buffer.hpp>
 #include <glDemo/ogl/buffer/VertexArray.hpp>
 
+#include <glDemo/utils/Camera.hpp>
+
 using namespace OGL;
+using namespace OGLUtils;
 
 std::string loadFile(const std::string& path) {
     std::ifstream fileStream(path);
@@ -31,6 +35,38 @@ Shader loadShader(const std::string& path, ShaderType shaderType) {
 
     return Shader::create(shaderType, code);
 }
+
+glm::vec3 processMoving(GLFWwindow* window) {
+    glm::vec3 difference;
+
+    if (glfwGetKey(window, GLFW_KEY_W)) {
+        difference.z += 0.1;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_S)) {
+        difference.z -= 0.1;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_A)) {
+        difference.x -= 0.1;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_D)) {
+        difference.x += 0.1;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE)) {
+        difference.y += 0.1;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)) {
+        difference.y -= 0.1;
+    }
+
+    return difference;
+}
+
+const float EPSILON = 0.0001;
 
 int main()
 {
@@ -54,6 +90,8 @@ int main()
 
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Some window", nullptr, nullptr);
     glfwMakeContextCurrent(window);
+    Camera camera({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, 1.0f);
+    glm::dvec2 lastCursorPosition;
 
     glewExperimental = GL_TRUE;
     const GLenum glewInitializationCode = glewInit();
@@ -84,9 +122,8 @@ int main()
 
     shaderProgram.use();
     shaderProgram.setUniform("u_resolution", glm::vec2 { WINDOW_WIDTH, WINDOW_HEIGHT });
-    shaderProgram.setUniform("u_resolution", glm::vec2 { WINDOW_WIDTH, WINDOW_HEIGHT });
-    shaderProgram.setUniform("u_cameraPosition", glm::vec3 { 0.0f, 0.0f, -3.0f });
-    shaderProgram.setUniform("u_fov", 1.0f);
+    shaderProgram.setUniform("u_cameraPosition", camera.getPosition());
+    shaderProgram.setUniform("u_fov", camera.getFov());
 
     /* Rect initialization */
 
@@ -120,6 +157,9 @@ int main()
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
+        camera.move(processMoving(window));
+        shaderProgram.setUniform("u_cameraPosition", camera.getPosition());
 
         glClearColor(0.88f, 0.0f, 0.88f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
