@@ -19,58 +19,9 @@
 
 #include <glDemo/utils/Camera.hpp>
 
-using namespace OGL;
-using namespace OGLUtils;
-
-std::string loadFile(const std::string& path) {
-    std::ifstream fileStream(path);
-    std::stringstream buffer;
-    buffer << fileStream.rdbuf();
-    return buffer.str();
-}
-
-Shader loadShader(const std::string& path, ShaderType shaderType) {
-    GLint shaderId = glCreateShader(shaderType);
-    std::string code = loadFile(path);
-
-    return Shader::create(shaderType, code);
-}
-
-glm::vec3 processMoving(GLFWwindow* window) {
-    glm::vec3 difference;
-
-    if (glfwGetKey(window, GLFW_KEY_W)) {
-        difference.z += 0.1;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_S)) {
-        difference.z -= 0.1;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_A)) {
-        difference.x -= 0.1;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_D)) {
-        difference.x += 0.1;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_SPACE)) {
-        difference.y += 0.1;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)) {
-        difference.y -= 0.1;
-    }
-
-    return difference;
-}
-
-const float EPSILON = 0.0001;
-
 int main()
 {
-    /* GLFW and GLEW initialization; creating window */
+    /* GLFW initialization */
 
     if (glfwInit() != GLFW_TRUE) {
         const char* errorDescription;
@@ -90,8 +41,10 @@ int main()
 
     GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Some window", nullptr, nullptr);
     glfwMakeContextCurrent(window);
-    Camera camera({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, 1.0f);
-    glm::dvec2 lastCursorPosition;
+
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    glViewport(0, 0, width, height);
 
     glewExperimental = GL_TRUE;
     const GLenum glewInitializationCode = glewInit();
@@ -101,77 +54,6 @@ int main()
         std::exit(1);
     }
 
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
-    glViewport(0, 0, width, height);
-
-    /* Loading shader program */
-
-    Shader vertexShader = loadShader("./resources/vertex.glsl", ShaderType::Vertex);
-    Shader fragmentShader = loadShader("./resources/fragment.glsl", ShaderType::Fragment);
-    ShaderProgram shaderProgram = ShaderProgram::create(vertexShader, fragmentShader);
-
-    #ifdef DEBUG
-
-    std::cout << "Finded uniforms variables in shader program:" << std::endl;
-    for (const auto& uniform : shaderProgram.getUniforms()) {
-        std::cout << uniform.first << "; located at " << uniform.second << std::endl;
-    }
-
-    #endif
-
-    shaderProgram.use();
-    shaderProgram.setUniform("u_resolution", glm::vec2 { WINDOW_WIDTH, WINDOW_HEIGHT });
-    shaderProgram.setUniform("u_cameraPosition", camera.getPosition());
-    shaderProgram.setUniform("u_fov", camera.getFov());
-
-    /* Rect initialization */
-
-    float vertices[] = {
-         1.0f,  1.0f,
-         1.0f, -1.0f,
-        -1.0f, -1.0f,
-        -1.0f,  1.0f
-    };
-
-    unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3
-    };
-
-    VertexArray vertexArray = VertexArray::create();
-    vertexArray.bind();
-
-    Buffer vertexBuffer = Buffer::create(BufferType::Array);
-    vertexBuffer.bind();
-    vertexBuffer.loadData(sizeof(vertices), vertices);
-
-    Buffer elementBuffer = Buffer::create(BufferType::ElementArray);
-    elementBuffer.bind();
-    elementBuffer.loadData(sizeof(indices), indices);
-
-    auto attribute = VertexArrayAttribute(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    vertexArray.enableAttribute(attribute);
-
-    /* Main cycle */
-
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-
-        camera.move(processMoving(window));
-        shaderProgram.setUniform("u_cameraPosition", camera.getPosition());
-
-        glClearColor(0.88f, 0.0f, 0.88f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        shaderProgram.use();
-        vertexArray.bind();
-        glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(indices[0]), GL_UNSIGNED_INT, 0);
-
-        glfwSwapBuffers(window);
-    }
-
-    glfwDestroyWindow(window);
     glfwTerminate();
 
     return 0;
